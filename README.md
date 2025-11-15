@@ -21,6 +21,18 @@
 
 ---
 
+## 📥 **Download**
+
+Get the latest Windows executable directly. No installation required!
+
+<div align="center">
+
+[![Download SoundWave](https://img.shields.io/badge/Windows-Download_v1.0.0-blue?style=for-the-badge&logo=windows&logoColor=white)](PASTE_YOUR_LINK_HERE)
+
+</div>
+
+**Requirements:** Windows 10 or 11.
+
 ## 🔥 **Why SoundWave?**
 
 Most open-source music players are command-line only or lack visual polish. **SoundWave** changes the game. It combines a **Next-Gen Glassmorphism UI** with robust Python engineering to deliver a Spotify-like experience for free.
