@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>SoundWave Premium</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300..700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded" rel="stylesheet"/>
+    
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#8c25f4",
+                        "secondary": "#ff0080",
+                        "background-light": "#f7f5f8",
+                        "background-dark": "#0f0a15",
+                        "surface": "#1e1625",
+                    },
+                    fontFamily: {
+                        "display": ["Spline Sans", "sans-serif"]
+                    },
+                    animation: {
+                        'slide-up': 'slideUp 0.5s ease-out',
+                        'fade-in': 'fadeIn 0.6s ease-out',
+                        'wave': 'wave 1.2s ease-in-out infinite',
+                        'pulse-slow': 'pulse 3s infinite',
+                    }
+                },
+            },
+        }
+    </script>
+    
+    <style>
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes wave { 0% { height: 10%; } 50% { height: 100%; } 100% { height: 10%; } }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+
+        .material-symbols-rounded { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+
+        .glass {
+            background: rgba(30, 22, 37, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .player-glass {
+            background: rgba(15, 10, 21, 0.95);
+            backdrop-filter: blur(30px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+        }
+
+        .logo-text {
+            background: linear-gradient(to right, #8c25f4, #ff0080);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.03em;
+        }
+        
+        .music-wave { display: flex; align-items: end; gap: 3px; height: 20px; }
+        .music-wave span {
+            width: 4px; background: #fff; border-radius: 2px;
+            animation: wave 1s ease-in-out infinite; animation-play-state: paused;
+        }
+        .music-wave span:nth-child(2) { animation-delay: 0.1s; height: 60%; }
+        .music-wave span:nth-child(3) { animation-delay: 0.2s; height: 80%; }
+        .music-wave span:nth-child(4) { animation-delay: 0.3s; height: 100%; }
+        
+        /* Smooth Image Loading */
+        .bg-cover { background-size: cover; background-position: center; transition: background-image 0.5s ease-in-out; }
+        
+        /* Playlist styles */
+        .playlist-item { transition: all 0.2s ease; }
+        .playlist-item:hover { transform: translateX(4px); }
+        .playlist-song-item { transition: all 0.2s ease; }
+        .playlist-song-item:hover { background: rgba(255, 255, 255, 0.05); }
+        
+        /* Modal styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background: rgba(30, 22, 37, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+    </style>
+</head>
+<body class="font-display bg-background-dark text-gray-200 selection:bg-primary/30 selection:text-white h-screen flex flex-col overflow-hidden">
+    
+    <audio id="player-audio" class="hidden"></audio>
+    
+    <div id="create-playlist-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold text-white">Create New Playlist</h3>
+                <button id="close-create-modal" class="text-gray-400 hover:text-white transition-colors">
+                    <span class="material-symbols-rounded text-2xl">close</span>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Playlist Name</label>
+                    <input type="text" id="playlist-name-input" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-primary transition-colors" placeholder="Enter playlist name...">
+                </div>
+                <div class="flex gap-3 justify-end">
+                    <button id="cancel-create-playlist" class="px-4 py-2 text-gray-400 hover:text-white transition-colors">Cancel</button>
+                    <button id="confirm-create-playlist" class="px-6 py-2 bg-primary text-white rounded-xl hover:bg-purple-700 transition-colors">Create</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="rename-playlist-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold text-white">Rename Playlist</h3>
+                <button id="close-rename-modal" class="text-gray-400 hover:text-white transition-colors">
+                    <span class="material-symbols-rounded text-2xl">close</span>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">New Playlist Name</label>
+                    <input type="text" id="rename-playlist-input" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-primary transition-colors" placeholder="Enter new playlist name...">
+                </div>
+                <div class="flex gap-3 justify-end">
+                    <button id="cancel-rename-playlist" class="px-4 py-2 text-gray-400 hover:text-white transition-colors">Cancel</button>
+                    <button id="confirm-rename-playlist" class="px-6 py-2 bg-primary text-white rounded-xl hover:bg-purple-700 transition-colors">Rename</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex flex-1 overflow-hidden relative">
+        
+        <aside class="hidden lg:flex w-80 flex-col glass z-20 shrink-0">
+            <div class="p-6 pb-4">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="size-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg shadow-primary/20">
+                        <span class="material-symbols-rounded text-white text-2xl">graphic_eq</span>
+                    </div>
+                    <h2 class="text-2xl font-bold logo-text tracking-tight">SoundWave</h2>
+                </div>
+                
+                <div class="mb-6">
+                    <div class="flex items-center justify-between text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">
+                        <span>Your Playlists</span>
+                        <button id="create-playlist-btn" class="size-6 flex items-center justify-center rounded-full bg-primary/20 text-primary hover:bg-primary/30 transition-colors" title="Create Playlist">
+                            <span class="material-symbols-rounded text-lg">add</span>
+                        </button>
+                    </div>
+                    <div id="playlists-container" class="space-y-1 max-h-40 overflow-y-auto">
+                        </div>
+                </div>
+                
+                <div class="flex items-center justify-between text-sm font-medium text-gray-400 uppercase tracking-wider mb-2">
+                    <span>Up Next</span>
+                    <span id="queue-count" class="bg-white/10 px-2 py-0.5 rounded-md text-xs text-white">0</span>
+                </div>
+            </div>
+            
+            <div id="queue-list" class="flex-1 overflow-y-auto px-4 pb-4 flex flex-col gap-1.5 scroll-smooth mask-image-b">
+                <div class="flex flex-col items-center justify-center h-40 text-gray-500 opacity-60 mt-10">
+                    <span class="material-symbols-rounded text-4xl mb-2">queue_music</span>
+                    <p class="text-sm">Queue is empty</p>
+                    <p class="text-xs opacity-70">Add songs to start listening</p>
+                </div>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col relative overflow-hidden z-10 bg-gradient-to-b from-[#1a1225] to-background-dark">
+            
+            <header class="flex items-center justify-between px-6 py-5 sticky top-0 z-20 animate-slide-up">
+                <div class="flex-1 max-w-xl">
+                    <label class="flex w-full">
+                        <div class="flex w-full items-center rounded-full h-12 bg-white/5 backdrop-blur-md transition-all duration-300 focus-within:bg-white/10 focus-within:border-primary/50 border border-white/5 group shadow-lg">
+                            <div class="text-gray-400 flex items-center justify-center pl-5 group-focus-within:text-primary transition-colors">
+                                <span class="material-symbols-rounded text-[22px]">search</span>
+                            </div>
+                            <input id="search-input" class="flex w-full min-w-0 bg-transparent text-white focus:outline-none h-full placeholder:text-gray-500 px-4 text-sm font-medium" placeholder="Search songs, artists, albums..." value=""/>
+                        </div>
+                    </label>
+                </div>
+                
+                <div class="flex items-center gap-4 ml-6">
+                    <a href="https://github.com/Maddy0057/SoundWave" target="_blank" class="hidden sm:flex items-center gap-2 text-gray-400 hover:text-white transition-colors duration-300 group">
+                         <span class="text-xs font-bold tracking-wide bg-white/5 px-3 py-1.5 rounded-full border border-white/5 group-hover:border-primary/50 group-hover:text-primary transition-all">MADDY0057</span>
+                    </a>
+                    <div class="bg-cover rounded-full size-10 cursor-pointer border border-white/10 hover:border-primary transition-all duration-300 shadow-lg" style='background-image: url("https://avatar.iran.liara.run/public/1");'></div>
+                </div>
+            </header>
+
+            <div class="flex-1 overflow-y-auto px-6 pb-40 scroll-smooth">
+                
+                <div id="current-playlist-view" class="hidden animate-fade-in mb-10">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center gap-4">
+                            <button id="back-to-search" class="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+                                <span class="material-symbols-rounded">arrow_back</span>
+                                <span>Back to Search</span>
+                            </button>
+                            <h2 id="current-playlist-name" class="text-3xl font-bold text-white"></h2>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button id="play-playlist" class="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-xl hover:bg-purple-700 transition-colors">
+                                <span class="material-symbols-rounded">play_arrow</span>
+                                Play All
+                            </button>
+                            <button id="rename-playlist-btn" class="flex items-center gap-2 bg-white/10 text-white px-4 py-2 rounded-xl hover:bg-white/20 transition-colors">
+                                <span class="material-symbols-rounded">edit</span>
+                                Rename
+                            </button>
+                            <button id="delete-playlist-btn" class="flex items-center gap-2 bg-red-500/20 text-red-400 px-4 py-2 rounded-xl hover:bg-red-500/30 transition-colors">
+                                <span class="material-symbols-rounded">delete</span>
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                    <div id="playlist-songs-container" class="space-y-2">
+                        </div>
+                </div>
+
+                <div id="hero-card-bg" class="w-full rounded-3xl overflow-hidden shadow-2xl shadow-black/50 transition-all duration-700 animate-fade-in mb-10 relative bg-cover bg-center group min-h-[320px]" style="background-image: url('https://avatar.iran.liara.run/public/2');">
+                    
+                    <div class="absolute inset-0 bg-gradient-to-r from-black/90 via-black/70 to-transparent z-0"></div>
+                    <div class="absolute inset-0 backdrop-blur-[50px] bg-black/20 z-0"></div>
+
+                    <div class="relative z-10 p-8 lg:p-12 flex flex-col md:flex-row items-center md:items-end gap-8 h-full">
+                        
+                        <div class="w-52 md:w-64 shrink-0 perspective-1000">
+                            <div id="hero-thumbnail" class="w-full aspect-square bg-cover rounded-2xl shadow-2xl shadow-black/60 transition-transform duration-500 group-hover:scale-[1.02]" data-alt="Album art" style='background-image: url("https://avatar.iran.liara.run/public/2");'></div>
+                        </div>
+                        
+                        <div class="flex flex-col text-center md:text-left text-white flex-1 pb-2">
+                            <div class="inline-flex items-center justify-center md:justify-start gap-2 mb-3 opacity-80">
+                                <div class="music-wave opacity-0 transition-opacity duration-300" id="hero-wave">
+                                    <span></span><span></span><span></span><span></span>
+                                </div>
+                                <p id="hero-status-text" class="text-sm font-bold tracking-widest uppercase text-primary">Now Playing</p>
+                            </div>
+                            
+                            <h1 id="hero-title" class="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight mb-2 text-shadow-xl line-clamp-2">Welcome</h1>
+                            <p id="hero-artist" class="text-xl md:text-2xl text-gray-300 font-medium line-clamp-1">Start searching to play music</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="search-results-view" class="animate-fade-in max-w-7xl mx-auto">
+                    <div class="flex items-center justify-between mb-4 px-2">
+                        <h2 id="results-title" class="text-white text-xl font-bold flex items-center gap-2">
+                            <span class="material-symbols-rounded text-primary">search</span>
+                            Top Results
+                        </h2>
+                    </div>
+                    <div id="results-container" class="grid grid-cols-1 gap-2 pb-10">
+                        <div class="flex flex-col items-center justify-center py-16 text-gray-600 border border-dashed border-white/10 rounded-2xl bg-white/5">
+                            <span class="material-symbols-rounded text-6xl mb-4 opacity-50">music_note</span>
+                            <p class="text-lg">Your music journey starts here.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="fixed bottom-0 left-0 right-0 z-50">
+        <div class="player-glass p-5 lg:p-6 h-32 flex flex-col justify-center"> <div class="lg:hidden w-full flex items-center gap-2 absolute top-0 left-0 right-0">
+                <div id="mobile-progress-container" class="w-full bg-transparent h-1.5 cursor-pointer group">
+                    <div id="mobile-progress-bar" class="bg-primary h-full transition-all duration-100 ease-linear" style="width: 0%"></div>
+                </div>
+            </div>
+            
+            <div class="w-full flex items-center justify-between gap-6 max-w-screen-3xl mx-auto">
+                
+                <div class="flex items-center gap-5 w-1/4 min-w-0">
+                    <div id="player-thumbnail" class="bg-cover rounded-xl size-20 shrink-0 cursor-pointer transition-all hover:opacity-90 shadow-xl border border-white/5" style='background-image: url("https://avatar.iran.liara.run/public/3");'></div>
+                    <div class="flex flex-col justify-center min-w-0 gap-1">
+                        <p id="player-title" class="text-white text-lg font-bold truncate leading-tight">Not Playing</p>
+                        <p id="player-artist" class="text-gray-400 text-base font-medium truncate leading-tight">Select a song</p>
+                    </div>
+                </div>
+
+                <div class="flex flex-col items-center gap-2 w-full lg:w-1/2">
+                    <div class="flex items-center gap-8 sm:gap-10">
+                        
+                        <button id="autoplay-btn" class="text-primary hover:text-white transition-colors relative group p-2" title="Autoplay Similar Songs">
+                            <span class="material-symbols-rounded text-2xl">all_inclusive</span>
+                            <span id="autoplay-dot" class="absolute bottom-1 left-1/2 -translate-x-1/2 size-1.5 bg-primary rounded-full transition-opacity" style="opacity: 1;"></span>
+                        </button>
+
+                        <button id="shuffle-btn" class="text-gray-500 hover:text-white transition-colors relative group p-2" title="Shuffle">
+                            <span class="material-symbols-rounded text-2xl">shuffle</span>
+                            <span class="absolute bottom-1 left-1/2 -translate-x-1/2 size-1.5 bg-primary rounded-full opacity-0 transition-opacity"></span>
+                        </button>
+
+                        <button id="prev-button" class="text-gray-300 hover:text-white transition-transform hover:scale-110 p-2">
+                            <span class="material-symbols-rounded text-4xl">skip_previous</span>
+                        </button>
+                        
+                        <button id="play-pause-button" class="bg-white text-black rounded-full size-16 flex items-center justify-center transition-transform hover:scale-105 shadow-lg shadow-white/20 hover:bg-gray-100">
+                            <span id="play-pause-icon" class="material-symbols-rounded text-5xl" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                        </button>
+                        
+                        <button id="next-button" class="text-gray-300 hover:text-white transition-transform hover:scale-110 p-2">
+                            <span class="material-symbols-rounded text-4xl">skip_next</span>
+                        </button>
+
+                        <button id="repeat-btn" class="text-gray-500 hover:text-white transition-colors relative p-2" title="Repeat">
+                            <span id="repeat-icon" class="material-symbols-rounded text-2xl">repeat</span>
+                            <span id="repeat-dot" class="absolute bottom-1 left-1/2 -translate-x-1/2 size-1.5 bg-primary rounded-full opacity-0 transition-opacity"></span>
+                        </button>
+                    </div>
+                    
+                    <div class="hidden lg:flex w-full items-center gap-4 max-w-2xl mt-1">
+                        <p id="current-time-label" class="text-xs font-mono text-gray-400 w-10 text-right">0:00</p>
+                        <div id="progress-container" class="w-full bg-white/10 rounded-full h-2 group cursor-pointer relative overflow-hidden">
+                            <div id="progress-bar" class="bg-white h-full rounded-full relative z-10 transition-all duration-100 ease-linear" style="width: 0%"></div>
+                            <div class="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        </div>
+                        <p id="duration-label" class="text-xs font-mono text-gray-400 w-10">0:00</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-4 w-1/4">
+                    <div class="hidden lg:flex items-center gap-3 group w-auto justify-end bg-white/5 px-4 py-2 rounded-full border border-white/5">
+                        <button class="text-gray-400 hover:text-white" id="mute-btn">
+                            <span class="material-symbols-rounded text-2xl" id="volume-icon">volume_up</span>
+                        </button>
+                        <div id="volume-container" class="w-24 bg-white/20 rounded-full h-1.5 cursor-pointer relative overflow-hidden group">
+                            <div id="volume-bar" class="bg-white h-full rounded-full" style="width: 100%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            // --- Elements ---
+            const audio = document.getElementById('player-audio');
+            const searchInput = document.getElementById('search-input');
+            const resultsContainer = document.getElementById('results-container');
+            const resultsTitle = document.getElementById('results-title');
+            
+            // Player & Hero Elements
+            const playPauseBtn = document.getElementById('play-pause-button');
+            const playPauseIcon = document.getElementById('play-pause-icon');
+            const nextBtn = document.getElementById('next-button');
+            const prevBtn = document.getElementById('prev-button');
+            const shuffleBtn = document.getElementById('shuffle-btn');
+            const repeatBtn = document.getElementById('repeat-btn');
+            const repeatIcon = document.getElementById('repeat-icon');
+            const repeatDot = document.getElementById('repeat-dot');
+            
+            // Autoplay Elements
+            const autoplayBtn = document.getElementById('autoplay-btn');
+            const autoplayDot = document.getElementById('autoplay-dot');
+            
+            const playerTitle = document.getElementById('player-title');
+            const playerArtist = document.getElementById('player-artist');
+            const playerThumbnail = document.getElementById('player-thumbnail');
+            
+            const heroTitle = document.getElementById('hero-title');
+            const heroArtist = document.getElementById('hero-artist');
+            const heroThumbnail = document.getElementById('hero-thumbnail');
+            const heroCardBg = document.getElementById('hero-card-bg');
+            const heroStatusText = document.getElementById('hero-status-text');
+            const heroWave = document.getElementById('hero-wave');
+            
+            // Progress & Volume
+            const progressContainer = document.getElementById('progress-container');
+            const progressBar = document.getElementById('progress-bar');
+            const currentTimeLabel = document.getElementById('current-time-label');
+            const durationLabel = document.getElementById('duration-label');
+            const mobileProgressContainer = document.getElementById('mobile-progress-container');
+            const mobileProgressBar = document.getElementById('mobile-progress-bar');
+            const volumeContainer = document.getElementById('volume-container');
+            const volumeBar = document.getElementById('volume-bar');
+            const muteBtn = document.getElementById('mute-btn');
+            const volumeIcon = document.getElementById('volume-icon');
+            
+            const musicWaves = document.querySelectorAll('.music-wave span');
+            const queueList = document.getElementById('queue-list');
+            const queueCount = document.getElementById('queue-count');
+            
+            // Playlist Elements
+            const playlistsContainer = document.getElementById('playlists-container');
+            const createPlaylistBtn = document.getElementById('create-playlist-btn');
+            const createPlaylistModal = document.getElementById('create-playlist-modal');
+            const closeCreateModal = document.getElementById('close-create-modal');
+            const cancelCreatePlaylist = document.getElementById('cancel-create-playlist');
+            const confirmCreatePlaylist = document.getElementById('confirm-create-playlist');
+            const playlistNameInput = document.getElementById('playlist-name-input');
+            
+            const renamePlaylistModal = document.getElementById('rename-playlist-modal');
+            const closeRenameModal = document.getElementById('close-rename-modal');
+            const cancelRenamePlaylist = document.getElementById('cancel-rename-playlist');
+            const confirmRenamePlaylist = document.getElementById('confirm-rename-playlist');
+            const renamePlaylistInput = document.getElementById('rename-playlist-input');
+            
+            const currentPlaylistView = document.getElementById('current-playlist-view');
+            const searchResultsView = document.getElementById('search-results-view');
+            const backToSearch = document.getElementById('back-to-search');
+            const currentPlaylistName = document.getElementById('current-playlist-name');
+            const playlistSongsContainer = document.getElementById('playlist-songs-container');
+            const playPlaylistBtn = document.getElementById('play-playlist');
+            const renamePlaylistBtn = document.getElementById('rename-playlist-btn');
+            const deletePlaylistBtn = document.getElementById('delete-playlist-btn');
+            
+            // --- State ---
+            let currentQueue = [];
+            let currentTrackIndex = 0;
+            let isPlaying = false;
+            let debounceTimer;
+            
+            // Shuffle, Repeat & Autoplay State
+            let isShuffle = false;
+            let repeatMode = 0; // 0: Off, 1: All, 2: One
+            
+            // CHANGED: Autoplay is ON by default
+            let isAutoplay = true; 
+
+            // Playlist State
+            let playlists = {};
+            let currentPlaylist = null;
+
+            // --- Core Logic ---
+
+            function playSong(song) {
+                if (!song) return;
+                
+                // If changing song, update source
+                if(audio.src !== window.location.origin + `/stream/${song.videoId}`) {
+                    audio.src = `/stream/${song.videoId}`;
+                }
+                
+                updatePlayerUI(song.title, song.artist, song.thumbnail);
+                
+                audio.play().then(() => {
+                    isPlaying = true;
+                    updatePlayPauseIcon();
+                }).catch(e => console.error("Playback failed:", e));
+                
+                renderQueue(); // Update active state
+            }
+
+            function updatePlayerUI(title, artist, thumbnail) {
+                const safeThumbnail = thumbnail || 'https://avatar.iran.liara.run/public/4';
+                
+                // Bottom Player
+                playerTitle.textContent = title;
+                playerArtist.textContent = artist;
+                playerThumbnail.style.backgroundImage = `url("${safeThumbnail}")`;
+
+                // Hero Card
+                heroTitle.textContent = title;
+                heroArtist.textContent = artist;
+                heroThumbnail.style.backgroundImage = `url("${safeThumbnail}")`;
+                heroCardBg.style.backgroundImage = `url("${safeThumbnail}")`;
+                
+                heroStatusText.textContent = "Now Playing";
+                document.title = `${title} - SoundWave`;
+            }
+
+            function updatePlayPauseIcon() {
+                const state = isPlaying ? 'running' : 'paused';
+                musicWaves.forEach(span => span.style.animationPlayState = state);
+                
+                if (isPlaying) {
+                    playPauseIcon.textContent = 'pause';
+                    if(heroWave) heroWave.style.opacity = '1';
+                } else {
+                    playPauseIcon.textContent = 'play_arrow';
+                    if(heroWave) heroWave.style.opacity = '0';
+                }
+            }
+
+            // --- Recommendation Logic ---
+
+            async function fetchRecommendations(videoId) {
+                try {
+                    // Show a temporary loading status on the player title
+                    const originalTitle = playerTitle.textContent;
+                    playerArtist.textContent = "Finding similar songs...";
+                    
+                    const response = await fetch(`/api/recommendations?videoId=${videoId}`);
+                    if (!response.ok) throw new Error('Failed to fetch');
+                    
+                    const songs = await response.json();
+                    
+                    // Restore text (will be overwritten by playSong anyway, but good safety)
+                    playerArtist.textContent = "Loading...";
+                    
+                    return songs;
+                } catch (error) {
+                    console.error("Error getting recommendations:", error);
+                    return [];
+                }
+            }
+
+            function toggleAutoplay() {
+                isAutoplay = !isAutoplay;
+                if (isAutoplay) {
+                    autoplayBtn.classList.remove('text-gray-500');
+                    autoplayBtn.classList.add('text-primary');
+                    autoplayDot.style.opacity = '1';
+                    
+                    // If queue is currently finished, trigger immediately
+                    if (!isPlaying && currentQueue.length > 0 && currentTrackIndex === currentQueue.length - 1) {
+                        playNext();
+                    }
+                } else {
+                    autoplayBtn.classList.add('text-gray-500');
+                    autoplayBtn.classList.remove('text-primary');
+                    autoplayDot.style.opacity = '0';
+                }
+            }
+
+            // --- Queue Management ---
+
+            function addToLocalQueue(song) {
+                currentQueue.push(song);
+                renderQueue();
+            }
+
+            function renderQueue() {
+                queueCount.textContent = currentQueue.length;
+                queueList.innerHTML = '';
+                
+                if (currentQueue.length === 0) {
+                    queueList.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-40 text-gray-500 opacity-60 mt-4">
+                        <span class="material-symbols-rounded text-4xl mb-2">queue_music</span>
+                        <p class="text-sm">Queue is empty</p>
+                    </div>`;
+                    return;
+                }
+
+                currentQueue.forEach((song, index) => {
+                    const isCurrent = index === currentTrackIndex;
+                    const item = document.createElement('div');
+                    
+                    const baseClass = "flex items-center gap-3 p-2.5 rounded-xl cursor-pointer transition-all duration-200 group border border-transparent";
+                    const activeClass = isCurrent ? "bg-white/10 border-white/5 shadow-inner" : "hover:bg-white/5 hover:border-white/5 opacity-70 hover:opacity-100";
+                    
+                    item.className = `${baseClass} ${activeClass}`;
+                    
+                    item.innerHTML = `
+                        <div class="relative size-11 shrink-0">
+                            <div class="bg-cover rounded-lg size-11 shadow-md" style="background-image: url('${song.thumbnail}')"></div>
+                            ${isCurrent ? `
+                                <div class="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg">
+                                    <span class="material-symbols-rounded text-primary text-lg animate-pulse" style="font-variation-settings: 'FILL' 1;">graphic_eq</span>
+                                </div>` 
+                            : ''}
+                        </div>
+                        <div class="flex flex-col min-w-0 flex-1">
+                            <p class="text-white text-sm font-bold truncate ${isCurrent ? 'text-primary' : ''}">${song.title}</p>
+                            <p class="text-gray-400 text-xs truncate font-medium">${song.artist}</p>
+                        </div>
+                    `;
+                    
+                    item.addEventListener('click', () => {
+                        currentTrackIndex = index;
+                        playSong(song);
+                    });
+                    
+                    queueList.appendChild(item);
+                });
+            }
+
+            // --- Playlist Management ---
+
+            async function loadPlaylists() {
+                try {
+                    const response = await fetch('/api/playlists');
+                    if (response.ok) {
+                        playlists = await response.json();
+                        renderPlaylists();
+                    }
+                } catch (error) {
+                    console.error('Error loading playlists:', error);
+                }
+            }
+
+            function renderPlaylists() {
+                playlistsContainer.innerHTML = '';
+                
+                if (Object.keys(playlists).length === 0) {
+                    playlistsContainer.innerHTML = `
+                        <div class="text-center text-gray-500 py-4 text-sm">
+                            No playlists yet
+                        </div>`;
+                    return;
+                }
+
+                Object.keys(playlists).forEach(playlistName => {
+                    const playlist = playlists[playlistName];
+                    const item = document.createElement('div');
+                    item.className = 'playlist-item flex items-center justify-between p-2 rounded-lg cursor-pointer hover:bg-white/5';
+                    
+                    item.innerHTML = `
+                        <div class="flex items-center gap-3 flex-1 min-w-0">
+                            <span class="material-symbols-rounded text-gray-400">queue_music</span>
+                            <div class="flex flex-col min-w-0 flex-1">
+                                <p class="text-white text-sm font-medium truncate">${playlistName}</p>
+                                <p class="text-gray-500 text-xs">${playlist.songs.length} songs</p>
+                            </div>
+                        </div>
+                    `;
+                    
+                    item.addEventListener('click', () => {
+                        showPlaylist(playlistName);
+                    });
+                    
+                    playlistsContainer.appendChild(item);
+                });
+            }
+
+            async function createPlaylist(name) {
+                try {
+                    const response = await fetch('/api/playlists', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        playlists = data.playlists;
+                        renderPlaylists();
+                        hideCreatePlaylistModal();
+                        return true;
+                    } else {
+                        const error = await response.json();
+                        alert(error.error || 'Failed to create playlist');
+                        return false;
+                    }
+                } catch (error) {
+                    console.error('Error creating playlist:', error);
+                    alert('Failed to create playlist');
+                    return false;
+                }
+            }
+
+            async function deleteCurrentPlaylist() {
+                if (!currentPlaylist || !confirm(`Are you sure you want to delete "${currentPlaylist}"?`)) {
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/api/playlists/${encodeURIComponent(currentPlaylist)}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        playlists = data.playlists;
+                        renderPlaylists();
+                        showSearchView();
+                    } else {
+                        const error = await response.json();
+                        alert(error.error || 'Failed to delete playlist');
+                    }
+                } catch (error) {
+                    console.error('Error deleting playlist:', error);
+                    alert('Failed to delete playlist');
+                }
+            }
+
+            async function renameCurrentPlaylist(newName) {
+                if (!currentPlaylist) return;
+                
+                try {
+                    const response = await fetch(`/api/playlists/${encodeURIComponent(currentPlaylist)}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: newName })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        playlists = data.playlists;
+                        renderPlaylists();
+                        currentPlaylist = newName;
+                        showPlaylist(newName);
+                        hideRenamePlaylistModal();
+                    } else {
+                        const error = await response.json();
+                        alert(error.error || 'Failed to rename playlist');
+                    }
+                } catch (error) {
+                    console.error('Error renaming playlist:', error);
+                    alert('Failed to rename playlist');
+                }
+            }
+
+            async function addSongToPlaylist(playlistName, song) {
+                try {
+                    const response = await fetch(`/api/playlists/${encodeURIComponent(playlistName)}/songs`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ song })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        playlists[playlistName] = data.playlist;
+                        if (currentPlaylist === playlistName) {
+                            showPlaylist(playlistName);
+                        }
+                        return true;
+                    } else {
+                        const error = await response.json();
+                        alert(error.error || 'Failed to add song to playlist');
+                        return false;
+                    }
+                } catch (error) {
+                    console.error('Error adding song to playlist:', error);
+                    alert('Failed to add song to playlist');
+                    return false;
+                }
+            }
+
+            async function removeSongFromPlaylist(playlistName, videoId) {
+                try {
+                    const response = await fetch(`/api/playlists/${encodeURIComponent(playlistName)}/songs/${videoId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        playlists[playlistName] = data.playlist;
+                        showPlaylist(playlistName);
+                        return true;
+                    } else {
+                        const error = await response.json();
+                        alert(error.error || 'Failed to remove song from playlist');
+                        return false;
+                    }
+                } catch (error) {
+                    console.error('Error removing song from playlist:', error);
+                    alert('Failed to remove song from playlist');
+                    return false;
+                }
+            }
+
+            function showPlaylist(playlistName) {
+                const playlist = playlists[playlistName];
+                if (!playlist) return;
+                
+                currentPlaylist = playlistName;
+                currentPlaylistName.textContent = playlistName;
+                
+                // Show playlist view, hide search view
+                currentPlaylistView.classList.remove('hidden');
+                searchResultsView.classList.add('hidden');
+                document.getElementById('hero-card-bg').classList.add('hidden');
+                
+                renderPlaylistSongs(playlist.songs);
+            }
+
+            function renderPlaylistSongs(songs) {
+                playlistSongsContainer.innerHTML = '';
+                
+                if (songs.length === 0) {
+                    playlistSongsContainer.innerHTML = `
+                        <div class="flex flex-col items-center justify-center py-16 text-gray-500 border border-dashed border-white/10 rounded-2xl bg-white/5">
+                            <span class="material-symbols-rounded text-6xl mb-4 opacity-50">queue_music</span>
+                            <p class="text-lg mb-2">This playlist is empty</p>
+                            <p class="text-sm opacity-70">Add songs from search results</p>
+                        </div>`;
+                    return;
+                }
+                
+                songs.forEach((song, index) => {
+                    const songEl = document.createElement('div');
+                    songEl.className = 'playlist-song-item flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-transparent hover:border-white/10 px-4 py-3 rounded-2xl transition-all duration-200 cursor-pointer';
+                    
+                    songEl.innerHTML = `
+                        <div class="text-gray-500 w-6 text-sm font-mono text-center">${index + 1}</div>
+                        <div class="relative size-12 shrink-0">
+                            <div class="bg-cover rounded-lg size-12 shadow-md" style="background-image: url('${song.thumbnail || 'https://avatar.iran.liara.run/public/5'}')"></div>
+                            <div class="absolute inset-0 bg-black/40 rounded-lg opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity backdrop-blur-[1px]">
+                                <span class="material-symbols-rounded text-white text-3xl drop-shadow-lg" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                            </div>
+                        </div>
+                        <div class="flex flex-col min-w-0 flex-1">
+                            <p class="text-white text-sm font-bold truncate group-hover:text-primary transition-colors">${song.title}</p>
+                            <p class="text-gray-400 text-xs truncate font-medium">${song.artist}</p>
+                        </div>
+                        <button class="remove-from-playlist-btn size-10 flex items-center justify-center rounded-full text-gray-400 hover:text-red-400 hover:bg-white/10 transition-all opacity-70 hover:opacity-100" title="Remove from playlist">
+                            <span class="material-symbols-rounded text-xl">remove_circle</span>
+                        </button>
+                    `;
+                    
+                    // Play song when clicked
+                    songEl.addEventListener('click', (e) => {
+                        if (!e.target.closest('.remove-from-playlist-btn')) {
+                            currentQueue = [...songs];
+                            currentTrackIndex = index;
+                            playSong(song);
+                        }
+                    });
+                    
+                    // Remove from playlist
+                    const removeBtn = songEl.querySelector('.remove-from-playlist-btn');
+                    removeBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        removeSongFromPlaylist(currentPlaylist, song.videoId);
+                    });
+                    
+                    playlistSongsContainer.appendChild(songEl);
+                });
+            }
+
+            function showSearchView() {
+                currentPlaylistView.classList.add('hidden');
+                searchResultsView.classList.remove('hidden');
+                document.getElementById('hero-card-bg').classList.remove('hidden');
+                currentPlaylist = null;
+            }
+
+            function playPlaylist() {
+                if (!currentPlaylist) return;
+                
+                const playlist = playlists[currentPlaylist];
+                if (playlist && playlist.songs.length > 0) {
+                    currentQueue = [...playlist.songs];
+                    currentTrackIndex = 0;
+                    playSong(playlist.songs[0]);
+                }
+            }
+
+            // --- Modal Management ---
+
+            function showCreatePlaylistModal() {
+                createPlaylistModal.classList.add('active');
+                playlistNameInput.value = '';
+                playlistNameInput.focus();
+            }
+
+            function hideCreatePlaylistModal() {
+                createPlaylistModal.classList.remove('active');
+            }
+
+            function showRenamePlaylistModal() {
+                if (!currentPlaylist) return;
+                renamePlaylistModal.classList.add('active');
+                renamePlaylistInput.value = currentPlaylist;
+                renamePlaylistInput.focus();
+            }
+
+            function hideRenamePlaylistModal() {
+                renamePlaylistModal.classList.remove('active');
+            }
+
+            // --- Shuffle, Repeat & Autoplay Logic ---
+
+            shuffleBtn.addEventListener('click', () => {
+                isShuffle = !isShuffle;
+                if (isShuffle) {
+                    shuffleBtn.classList.remove('text-gray-500');
+                    shuffleBtn.classList.add('text-primary');
+                    shuffleBtn.querySelector('span:last-child').style.opacity = '1'; 
+                } else {
+                    shuffleBtn.classList.add('text-gray-500');
+                    shuffleBtn.classList.remove('text-primary');
+                    shuffleBtn.querySelector('span:last-child').style.opacity = '0'; 
+                }
+            });
+
+            repeatBtn.addEventListener('click', () => {
+                repeatMode = (repeatMode + 1) % 3;
+                
+                repeatBtn.classList.add('text-gray-500');
+                repeatBtn.classList.remove('text-primary');
+                repeatIcon.textContent = 'repeat';
+                repeatDot.style.opacity = '0';
+
+                if (repeatMode === 1) { // Repeat All
+                    repeatBtn.classList.remove('text-gray-500');
+                    repeatBtn.classList.add('text-primary');
+                    repeatDot.style.opacity = '1'; 
+                } else if (repeatMode === 2) { // Repeat One
+                    repeatBtn.classList.remove('text-gray-500');
+                    repeatBtn.classList.add('text-primary');
+                    repeatIcon.textContent = 'repeat_one';
+                    repeatDot.style.opacity = '1'; 
+                }
+            });
+            
+            autoplayBtn.addEventListener('click', toggleAutoplay);
+
+            function getNextTrackIndex() {
+                if (repeatMode === 2) return currentTrackIndex; // Repeat One
+                
+                if (isShuffle && currentQueue.length > 1) {
+                    let randomIndex;
+                    do {
+                        randomIndex = Math.floor(Math.random() * currentQueue.length);
+                    } while (randomIndex === currentTrackIndex); 
+                    return randomIndex;
+                } else {
+                    const nextIndex = currentTrackIndex + 1;
+                    if (nextIndex >= currentQueue.length) {
+                        return repeatMode === 1 ? 0 : -1;
+                    }
+                    return nextIndex;
+                }
+            }
+
+            function getPrevTrackIndex() {
+                if (audio.currentTime > 3) return currentTrackIndex;
+
+                let prevIndex = currentTrackIndex - 1;
+                if (prevIndex < 0) {
+                    return repeatMode === 1 ? currentQueue.length - 1 : 0;
+                }
+                return prevIndex;
+            }
+
+            async function playNext() {
+                if (currentQueue.length === 0) {
+                    isPlaying = false;
+                    updatePlayPauseIcon();
+                    return;
+                }
+                
+                const nextIndex = getNextTrackIndex();
+                
+                // Case 1: There is a next song in the queue
+                if (nextIndex !== -1) {
+                    currentTrackIndex = nextIndex;
+                    playSong(currentQueue[currentTrackIndex]);
+                } 
+                // Case 2: End of queue reached, but Autoplay is ON
+                else if (isAutoplay && currentQueue.length > 0) {
+                    const lastSong = currentQueue[currentQueue.length - 1];
+                    
+                    // Visual feedback
+                    resultsTitle.textContent = "Autoplay: Loading Recommendations...";
+                    
+                    const newSongs = await fetchRecommendations(lastSong.videoId);
+                    
+                    if (newSongs.length > 0) {
+                        // Add new songs to queue
+                        newSongs.forEach(song => {
+                            // Avoid duplicates immediately next to each other
+                            if (currentQueue[currentQueue.length-1].videoId !== song.videoId) {
+                                 currentQueue.push(song);
+                            }
+                        });
+                        
+                        renderQueue();
+                        
+                        // Move to the next track (which is the first new recommendation)
+                        currentTrackIndex++;
+                        playSong(currentQueue[currentTrackIndex]);
+                        
+                        // Notify user in UI
+                        resultsTitle.textContent = `Autoplay: Added ${newSongs.length} songs`;
+                        setTimeout(() => resultsTitle.textContent = "Top Results", 3000);
+                    } else {
+                        // No recommendations found
+                        isPlaying = false;
+                        updatePlayPauseIcon();
+                    }
+                } 
+                // Case 3: End of queue, Autoplay OFF
+                else {
+                    isPlaying = false;
+                    updatePlayPauseIcon();
+                    audio.currentTime = 0;
+                    progressBar.style.width = '0%';
+                    mobileProgressBar.style.width = '0%';
+                }
+            }
+
+            function playPrev() {
+                if (currentQueue.length === 0) return;
+                const prevIndex = getPrevTrackIndex();
+                currentTrackIndex = prevIndex;
+                playSong(currentQueue[currentTrackIndex]);
+            }
+
+            // --- Search ---
+
+            async function performSearch(query) {
+                resultsTitle.textContent = "Searching...";
+                resultsContainer.innerHTML = createLoadingSkeleton();
+                try {
+                    const response = await fetch(`/api/search?query=${encodeURIComponent(query)}`);
+                    if (!response.ok) throw new Error('Search failed');
+                    const songs = await response.json();
+                    resultsTitle.textContent = "Top Results";
+                    displayResults(songs);
+                } catch (error) {
+                    console.error('Search error:', error);
+                    resultsTitle.textContent = "Error";
+                    resultsContainer.innerHTML = `<p class="text-gray-400 text-center py-10">Could not fetch results.</p>`;
+                }
+            }
+
+            function displayResults(songs) {
+                resultsContainer.innerHTML = '';
+                if (!songs || songs.length === 0) {
+                    resultsContainer.innerHTML = `<p class="text-gray-400 text-center py-10">No results found.</p>`;
+                    return;
+                }
+                
+                songs.forEach((song, index) => {
+                    const songEl = createSongElement(song, index + 1);
+                    resultsContainer.appendChild(songEl);
+                    
+                    songEl.addEventListener('click', (e) => {
+                        if(currentQueue.length === 0) {
+                            currentQueue.push(song);
+                            currentTrackIndex = 0;
+                        } else {
+                            currentQueue.splice(currentTrackIndex + 1, 0, song);
+                            currentTrackIndex++;
+                        }
+                        playSong(song);
+                    });
+                });
+            }
+
+            function createSongElement(song, index) {
+                const el = document.createElement('div');
+                el.className = "group flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-transparent hover:border-white/10 px-4 py-3.5 rounded-2xl transition-all duration-200 cursor-pointer mb-2";
+                el.innerHTML = `
+                    <div class="text-gray-500 w-6 text-sm font-mono text-center">${index}</div>
+                    <div class="relative size-12 shrink-0">
+                        <div class="bg-cover rounded-lg size-12 shadow-md" style="background-image: url('${song.thumbnail || 'https://avatar.iran.liara.run/public/5'}')"></div>
+                        <div class="absolute inset-0 bg-black/40 rounded-lg opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity backdrop-blur-[1px]">
+                            <span class="material-symbols-rounded text-white text-3xl drop-shadow-lg" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col min-w-0 flex-1">
+                        <p class="text-white text-sm font-bold truncate group-hover:text-primary transition-colors">${song.title}</p>
+                        <p class="text-gray-400 text-xs truncate font-medium">${song.artist}</p>
+                    </div>
+                    <div class="flex gap-1">
+                        <button class="add-to-queue-btn size-10 flex items-center justify-center rounded-full text-gray-400 hover:text-white hover:bg-white/20 transition-all opacity-0 group-hover:opacity-100" title="Add to queue">
+                            <span class="material-symbols-rounded text-2xl">add_circle</span>
+                        </button>
+                        <div class="relative group/playlist">
+                            <button class="add-to-playlist-btn size-10 flex items-center justify-center rounded-full text-gray-400 hover:text-white hover:bg-white/20 transition-all opacity-0 group-hover:opacity-100" title="Add to playlist">
+                                <span class="material-symbols-rounded text-2xl">playlist_add</span>
+                            </button>
+                            <div class="absolute right-0 bottom-full mb-2 bg-surface border border-white/10 rounded-xl shadow-2xl py-2 min-w-48 opacity-0 invisible group-hover/playlist:opacity-100 group-hover/playlist:visible transition-all duration-200 z-30">
+                                <div class="text-xs text-gray-400 px-3 py-1 border-b border-white/5">Add to playlist:</div>
+                                <div id="playlist-dropdown-${song.videoId}" class="max-h-32 overflow-y-auto">
+                                    </div>
+                                <button class="create-new-playlist-from-song w-full text-left px-3 py-2 text-sm hover:bg-white/5 flex items-center gap-2 text-primary" data-song='${JSON.stringify(song).replace(/'/g, "&#39;")}'>
+                                    <span class="material-symbols-rounded text-lg">add</span>
+                                    Create New Playlist
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                const queueBtn = el.querySelector('.add-to-queue-btn');
+                queueBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    addToLocalQueue(song);
+                    
+                    // Backend API
+                    fetch(`/queue/${song.videoId}`).catch(err => console.log(err));
+                    
+                    queueBtn.innerHTML = `<span class="material-symbols-rounded text-primary text-2xl">check_circle</span>`;
+                    setTimeout(() => queueBtn.innerHTML = `<span class="material-symbols-rounded text-2xl">add_circle</span>`, 1500);
+                });
+                
+                const playlistBtn = el.querySelector('.add-to-playlist-btn');
+                const playlistDropdown = el.querySelector(`#playlist-dropdown-${song.videoId}`);
+                
+                // Populate playlist dropdown
+                function populatePlaylistDropdown() {
+                    playlistDropdown.innerHTML = '';
+                    
+                    if (Object.keys(playlists).length === 0) {
+                        playlistDropdown.innerHTML = '<div class="px-3 py-2 text-sm text-gray-500">No playlists</div>';
+                        return;
+                    }
+                    
+                    Object.keys(playlists).forEach(playlistName => {
+                        const option = document.createElement('button');
+                        option.className = 'w-full text-left px-3 py-2 text-sm hover:bg-white/5 flex items-center justify-between';
+                        option.innerHTML = `
+                            <span>${playlistName}</span>
+                            <span class="text-xs text-gray-500">${playlists[playlistName].songs.length}</span>
+                        `;
+                        
+                        option.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            addSongToPlaylist(playlistName, song);
+                        });
+                        
+                        playlistDropdown.appendChild(option);
+                    });
+                }
+                
+                // Update dropdown when playlists change
+                populatePlaylistDropdown();
+                
+                // Create new playlist from song
+                const createNewBtn = el.querySelector('.create-new-playlist-from-song');
+                createNewBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const songData = JSON.parse(createNewBtn.dataset.song.replace(/&#39;/g, "'"));
+                    showCreatePlaylistModal();
+                    
+                    // Set up listener for when playlist is created
+                    const originalConfirm = confirmCreatePlaylist.onclick;
+                    confirmCreatePlaylist.onclick = async () => {
+                        const name = playlistNameInput.value.trim();
+                        if (name && await createPlaylist(name)) {
+                            // Add song to the newly created playlist
+                            await addSongToPlaylist(name, songData);
+                            hideCreatePlaylistModal();
+                        }
+                    };
+                });
+                
+                return el;
+            }
+
+            function createLoadingSkeleton() {
+                let html = '';
+                for (let i = 0; i < 3; i++) {
+                    html += `
+                    <div class="flex items-center gap-4 px-4 py-3 rounded-xl animate-pulse bg-white/5 mb-2">
+                        <div class="size-12 bg-white/5 rounded-lg"></div>
+                        <div class="flex flex-col gap-2 flex-1">
+                            <div class="h-4 bg-white/5 rounded w-1/2"></div>
+                            <div class="h-3 bg-white/5 rounded w-1/3"></div>
+                        </div>
+                    </div>`;
+                }
+                return html;
+            }
+
+            // --- Events ---
+
+            searchInput.addEventListener('input', () => {
+                clearTimeout(debounceTimer);
+                const query = searchInput.value.trim();
+                if (query.length < 2) return;
+                debounceTimer = setTimeout(() => performSearch(query), 400); 
+            });
+
+            playPauseBtn.addEventListener('click', () => {
+                if (!audio.src) return; 
+                if (isPlaying) audio.pause(); else audio.play();
+                isPlaying = !isPlaying;
+                updatePlayPauseIcon();
+            });
+
+            nextBtn.addEventListener('click', playNext);
+            prevBtn.addEventListener('click', playPrev);
+            
+            // Playlist Events
+            createPlaylistBtn.addEventListener('click', showCreatePlaylistModal);
+            closeCreateModal.addEventListener('click', hideCreatePlaylistModal);
+            cancelCreatePlaylist.addEventListener('click', hideCreatePlaylistModal);
+            confirmCreatePlaylist.addEventListener('click', () => {
+                const name = playlistNameInput.value.trim();
+                if (name) {
+                    createPlaylist(name);
+                }
+            });
+            
+            closeRenameModal.addEventListener('click', hideRenamePlaylistModal);
+            cancelRenamePlaylist.addEventListener('click', hideRenamePlaylistModal);
+            confirmRenamePlaylist.addEventListener('click', () => {
+                const newName = renamePlaylistInput.value.trim();
+                if (newName) {
+                    renameCurrentPlaylist(newName);
+                }
+            });
+            
+            backToSearch.addEventListener('click', showSearchView);
+            playPlaylistBtn.addEventListener('click', playPlaylist);
+            renamePlaylistBtn.addEventListener('click', showRenamePlaylistModal);
+            deletePlaylistBtn.addEventListener('click', deleteCurrentPlaylist);
+            
+            // Close modals on overlay click
+            [createPlaylistModal, renamePlaylistModal].forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        if (modal === createPlaylistModal) hideCreatePlaylistModal();
+                        if (modal === renamePlaylistModal) hideRenamePlaylistModal();
+                    }
+                });
+            });
+            
+            // Enter key in modals
+            playlistNameInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    confirmCreatePlaylist.click();
+                }
+            });
+            
+            renamePlaylistInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    confirmRenamePlaylist.click();
+                }
+            });
+
+            audio.addEventListener('timeupdate', () => {
+                if (audio.duration) {
+                    const progressPercent = (audio.currentTime / audio.duration) * 100;
+                    progressBar.style.width = `${progressPercent}%`;
+                    mobileProgressBar.style.width = `${progressPercent}%`;
+                    
+                    const minutes = Math.floor(audio.currentTime / 60);
+                    const secs = Math.floor(audio.currentTime % 60);
+                    currentTimeLabel.textContent = `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+                }
+            });
+
+            audio.addEventListener('loadedmetadata', () => {
+                 const minutes = Math.floor(audio.duration / 60);
+                 const secs = Math.floor(audio.duration % 60);
+                 durationLabel.textContent = `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+            });
+
+            audio.addEventListener('ended', playNext);
+            
+            function seek(e, container) {
+                if (!audio.duration) return;
+                const rect = container.getBoundingClientRect();
+                const percent = (e.clientX - rect.left) / rect.width;
+                audio.currentTime = percent * audio.duration;
+            }
+            
+            progressContainer.addEventListener('click', (e) => seek(e, progressContainer));
+            mobileProgressContainer.addEventListener('click', (e) => seek(e, mobileProgressContainer));
+
+            function setVolume(e) {
+                const rect = volumeContainer.getBoundingClientRect();
+                let percent = (e.clientX - rect.left) / rect.width;
+                percent = Math.max(0, Math.min(1, percent));
+                audio.volume = percent;
+                volumeBar.style.width = `${percent * 100}%`;
+            }
+            volumeContainer.addEventListener('click', setVolume);
+            
+            muteBtn.addEventListener('click', () => {
+                audio.muted = !audio.muted;
+                volumeIcon.textContent = audio.muted ? 'volume_off' : 'volume_up';
+                volumeBar.style.opacity = audio.muted ? '0.3' : '1';
+            });
+
+            // Initialize
+            audio.volume = 1; 
+            updatePlayPauseIcon();
+            loadPlaylists(); // Load playlists on startup
+        });
+    </script>
+</body>
+</html>
